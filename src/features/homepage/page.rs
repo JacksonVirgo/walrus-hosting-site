@@ -6,7 +6,7 @@ use crate::utils::webpage::WebPageBuilder;
 pub async fn homepage() -> impl IntoResponse {
     let page = WebPageBuilder::new()
         .body(html! {
-            h1 {
+            h1."text-red-500 text-center" {
                 "Walrus"
             }
         })
