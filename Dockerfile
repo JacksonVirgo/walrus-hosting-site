@@ -3,7 +3,14 @@ ARG APP_NAME=walrus
 
 FROM rust:${RUST_VERSION}-alpine AS build
 
-RUN apk add musl-dev nodejs npm bash
+RUN apk add --no-cache \
+    musl-dev \
+    nodejs \
+    npm \
+    bash \
+    build-base \
+    pkgconf \
+    openssl-dev
 
 WORKDIR /app
 
