@@ -1,0 +1,27 @@
+services:
+    walrus:
+        build:
+            context: .
+        ports:
+            - "8000:8000"
+        restart: unless-stopped
+        environment:
+            - RUST_ENV=production
+        profiles:
+            - prod
+
+    walrus-dev:
+        build:
+            context: .
+        ports:
+            - "3000:3000"
+        environment:
+            - RUST_ENV=development
+        develop:
+            watch:
+                - path: ./src
+                  action: rebuild
+                - path: ./Cargo.toml
+                  action: rebuild
+        profiles:
+            - dev

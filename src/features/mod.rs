@@ -15,7 +15,7 @@ async fn handle_404() -> impl IntoResponse {
     let page = WebPageBuilder::new()
         .body(html! {
             h1 {
-                "Not Found"
+                "Not Found!"
             }
             div {
                 "Requested page does not exist"
