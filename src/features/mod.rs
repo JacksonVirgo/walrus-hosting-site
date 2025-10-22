@@ -5,7 +5,7 @@ use axum::{
 };
 use maud::html;
 
-use crate::{app::server::AppState, utils::WebPageBuilder};
+use crate::{app::server::AppState, utils::webpage::WebPageBuilder};
 
 pub fn router() -> Router<AppState> {
     Router::new().fallback(handle_404)
