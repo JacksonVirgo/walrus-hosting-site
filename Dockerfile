@@ -14,6 +14,7 @@ RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release
 
 COPY ./src ./src
+COPY ./public ./public
 
 RUN cargo build --release
 

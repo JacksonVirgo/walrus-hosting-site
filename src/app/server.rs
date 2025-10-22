@@ -1,8 +1,8 @@
+use crate::features::router;
 use anyhow::Result;
 use axum::Router;
+use tower_http::services::ServeDir;
 use tracing::info;
-
-use crate::features::router;
 
 #[derive(Clone)]
 pub struct AppState {}
@@ -24,5 +24,9 @@ pub async fn start_server() -> Result<()> {
 }
 
 pub fn generate_router(state: AppState) -> Router {
-    Router::new().merge(router()).with_state(state)
+    let public = ServeDir::new("/app/public");
+    Router::new()
+        .merge(router())
+        .with_state(state)
+        .nest_service("/public", public)
 }

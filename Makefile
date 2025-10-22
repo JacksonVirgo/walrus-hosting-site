@@ -3,6 +3,9 @@ PROJECT_NAME := walrus
 install:
 	cargo fetch
 
+build-container:
+	docker build -t walrus .
+
 run:
 	docker compose --profile dev up --watch
 
@@ -12,4 +15,4 @@ run-prod:
 test:
 	cargo test
 
-.PHONY: install run run-prod test
+.PHONY: install run run-prod test build-container
