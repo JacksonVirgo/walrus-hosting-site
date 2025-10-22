@@ -17,6 +17,9 @@ services:
             - "3000:3000"
         environment:
             - RUST_ENV=development
+        env_file: .env
+        volumes:
+            - ./env:/app/.env:ro
         develop:
             watch:
                 - path: ./src
