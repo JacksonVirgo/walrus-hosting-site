@@ -44,6 +44,7 @@ impl WebPageBuilder {
             head {
                 meta charset="utf-8";
                 title { (gen_title) }
+                link rel="stylesheet" href="/public/input.css";
             }
             body {
                (self.body)
