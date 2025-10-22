@@ -21,6 +21,8 @@ services:
             watch:
                 - path: ./src
                   action: rebuild
+                - path: ./public
+                  action: rebuild
                 - path: ./Cargo.toml
                   action: rebuild
         profiles:

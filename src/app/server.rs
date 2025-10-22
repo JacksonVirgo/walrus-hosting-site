@@ -5,7 +5,9 @@ use tower_http::services::ServeDir;
 use tracing::info;
 
 #[derive(Clone)]
-pub struct AppState {}
+pub struct Context {}
+
+pub type AppState = Context;
 
 pub async fn start_server() -> Result<()> {
     let address = std::env::var("ADDRESS").unwrap_or("0.0.0.0".into());
@@ -14,7 +16,7 @@ pub async fn start_server() -> Result<()> {
 
     info!("Starting server at: http://{}", target_url);
 
-    let state = AppState {};
+    let state = Context {};
 
     let app = generate_router(state);
     let listener = tokio::net::TcpListener::bind(target_url).await?;

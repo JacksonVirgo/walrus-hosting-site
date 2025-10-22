@@ -1,27 +1,22 @@
-use axum::{
-    Router,
-    http::StatusCode,
-    response::{Html, IntoResponse},
-};
-use maud::html;
+use crate::app::server::AppState;
+use axum::{Router, routing::get};
 
-use crate::{app::server::AppState, utils::webpage::WebPageBuilder};
+pub mod homepage;
+pub mod not_found;
 
 pub fn router() -> Router<AppState> {
-    Router::new().fallback(handle_404)
+    Router::new()
+        .merge(homepage::router())
+        .route("/test", get(test))
+        .fallback(not_found::handle_404)
 }
 
-async fn handle_404() -> impl IntoResponse {
-    let page = WebPageBuilder::new()
-        .body(html! {
-            h1 {
-                "Not Found!"
-            }
-            div {
-                "Requested page does not exist"
-            }
-        })
-        .build();
+pub async fn test() -> impl axum::response::IntoResponse {
+    let oob = maud::html! {
+        div id="test" hx-swap-oob="true" {
+            "Hi there! Replaced via OOB"
+        }
+    };
 
-    (StatusCode::NOT_FOUND, Html(page.into_string()))
+    axum::response::Html(oob.into_string())
 }

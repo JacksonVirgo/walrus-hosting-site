@@ -44,6 +44,7 @@ impl WebPageBuilder {
             head {
                 meta charset="utf-8";
                 title { (gen_title) }
+                script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.min.js" integrity="sha384-ZBXiYtYQ6hJ2Y0ZNoYuI+Nq5MqWBr+chMrS/RkXpNzQCApHEhOt2aY8EJgqwHLkJ" crossorigin="anonymous" {}
                 link rel="stylesheet" href="/public/input.css";
             }
             body {
