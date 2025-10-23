@@ -1,6 +1,6 @@
 # Walrus Hosting Site
 
-TBD
+Current projects todo can be found [here](/TODO.md)
 
 ## Tests
 
