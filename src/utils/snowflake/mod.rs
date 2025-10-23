@@ -4,32 +4,37 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 pub mod tests;
 
-const CUSTOM_EPOCH: u64 = 1420070400000;
+/*
+ * This file uses i64 over the preferred u64 due to db constraints
+ */
+
+const CUSTOM_EPOCH: i64 = 1420070400000;
+pub type Snowflake = i64;
 
 #[derive(Debug, Clone, Copy)]
-pub struct Snowflake {
-    pub timestamp: u64,
-    pub worker_id: u64,
-    pub process_id: u64,
-    pub increment: u64,
+pub struct SnowflakePayload {
+    pub timestamp: i64,
+    pub worker_id: i64,
+    pub process_id: i64,
+    pub increment: i64,
 }
 
-impl Snowflake {
-    pub fn new() -> anyhow::Result<Snowflake> {
+impl SnowflakePayload {
+    pub fn new() -> anyhow::Result<SnowflakePayload> {
         let mut generator = SNOWFLAKE
             .lock()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
         generator.next()
     }
 
-    pub fn to_u64(&self) -> u64 {
-        ((self.timestamp - CUSTOM_EPOCH) << 22)
+    pub fn to_snowflake(&self) -> Snowflake {
+        (((self.timestamp - CUSTOM_EPOCH) << 22)
             | (self.worker_id << 17)
             | (self.process_id << 12)
-            | self.increment
+            | self.increment) as Snowflake
     }
 
-    pub fn from_u64(value: u64) -> Self {
+    pub fn from_snowflake(value: Snowflake) -> Self {
         let timestamp = (value >> 22) + CUSTOM_EPOCH;
         let worker_id = (value >> 17) & 0x1F;
         let process_id = (value >> 12) & 0x1F;
@@ -44,14 +49,14 @@ impl Snowflake {
 }
 
 pub struct SnowflakeGenerator {
-    worker_id: u64,
-    process_id: u64,
-    increment: u64,
-    last_timestamp: u64,
+    worker_id: i64,
+    process_id: i64,
+    increment: i64,
+    last_timestamp: i64,
 }
 
 impl SnowflakeGenerator {
-    pub fn new(worker_id: u64, process_id: u64) -> Self {
+    pub fn new(worker_id: i64, process_id: i64) -> Self {
         Self {
             worker_id: worker_id & 0x1F,
             process_id: process_id & 0x1F,
@@ -68,13 +73,13 @@ impl SnowflakeGenerator {
         Ok(time.as_millis() as u64)
     }
 
-    pub fn next(&mut self) -> anyhow::Result<Snowflake> {
-        let mut timestamp = Self::current_millis()?;
+    pub fn next(&mut self) -> anyhow::Result<SnowflakePayload> {
+        let mut timestamp = Self::current_millis()? as i64;
         if timestamp == self.last_timestamp {
             self.increment = (self.increment + 1) & 0xFFF;
             if self.increment == 0 {
                 while timestamp <= self.last_timestamp {
-                    timestamp = Self::current_millis()?;
+                    timestamp = Self::current_millis()? as i64;
                 }
             }
         } else {
@@ -83,7 +88,7 @@ impl SnowflakeGenerator {
 
         self.last_timestamp = timestamp;
 
-        Ok(Snowflake {
+        Ok(SnowflakePayload {
             timestamp,
             worker_id: self.worker_id,
             process_id: self.process_id,

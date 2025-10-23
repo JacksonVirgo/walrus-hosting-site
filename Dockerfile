@@ -20,12 +20,17 @@ COPY ./Cargo.toml ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release
 
+COPY ./tailwind.config.js ./
 COPY ./src ./src
 COPY ./public ./public
+COPY ./migrations ./migrations
+COPY ./.sqlx ./.sqlx
+
+RUN cargo install sqlx-cli --no-default-features --features postgres
 
 RUN npm install tailwindcss @tailwindcss/cli
 RUN npx @tailwindcss/cli -i ./public/styles.css -o ./public/output.css #--minify
 
 RUN cargo build --release
 
-CMD ./target/release/walrus
+CMD ["sh", "-c", "sqlx migrate run && ./target/release/walrus"]

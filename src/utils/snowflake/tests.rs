@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::utils::snowflake::{CUSTOM_EPOCH, Snowflake, SnowflakeGenerator};
+    use crate::utils::snowflake::{CUSTOM_EPOCH, SnowflakeGenerator, SnowflakePayload};
 
     use std::collections::HashSet;
     use std::sync::{Arc, Mutex};
@@ -8,15 +8,15 @@ mod tests {
 
     #[test]
     fn snowflake_roundtrip() {
-        let snowflake = Snowflake {
+        let snowflake = SnowflakePayload {
             timestamp: CUSTOM_EPOCH + 1_000_000,
             worker_id: 0x1F & 3,
             process_id: 0x1F & 7,
             increment: 0xFF & 42,
         };
 
-        let value = snowflake.to_u64();
-        let decoded = Snowflake::from_u64(value);
+        let value = snowflake.to_snowflake();
+        let decoded = SnowflakePayload::from_snowflake(value);
 
         assert_eq!(snowflake.timestamp, decoded.timestamp);
         assert_eq!(snowflake.worker_id, decoded.worker_id);
@@ -37,8 +37,8 @@ mod tests {
             let set_cloned = Arc::clone(&set);
             handles.push(thread::spawn(move || {
                 for _ in 0..ids_per_thread {
-                    let sf = Snowflake::new().expect("Snowflake failed to be generated");
-                    let v = sf.to_u64();
+                    let sf = SnowflakePayload::new().expect("Snowflake failed to be generated");
+                    let v = sf.to_snowflake();
                     let mut guard = set_cloned.lock().unwrap();
                     let inserted = guard.insert(v);
                     if !inserted {
@@ -63,7 +63,7 @@ mod tests {
         let second = generator.next().unwrap();
 
         assert!(
-            first.to_u64() != second.to_u64(),
+            first.to_snowflake() != second.to_snowflake(),
             "Consequtive snowflakes must differ"
         );
 
@@ -79,7 +79,7 @@ mod tests {
         let n = 50_000usize;
         for _ in 0..n {
             let sf = generator.next().unwrap();
-            let v = sf.to_u64();
+            let v = sf.to_snowflake();
             if !seen.insert(v) {
                 panic!("Duplicate seen in single generator run: {}", v);
             }
