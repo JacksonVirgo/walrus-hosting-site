@@ -7,8 +7,11 @@ install:
 build-container:
 	docker build -t walrus .
 
-build-db-queries:
+
+db-migrate:
 	sqlx migrate run
+
+db-prepare:
 	cargo sqlx prepare -- --lib
 
 run:
@@ -20,4 +23,4 @@ run-prod:
 test:
 	cargo test
 
-.PHONY: install run run-prod test build-container build-db-queries
+.PHONY: install run run-prod test build-container db-migrate db-prepare

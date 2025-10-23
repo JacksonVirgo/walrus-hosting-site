@@ -8,19 +8,6 @@ services:
             POSTGRES_HOST_AUTH_METHOD: trust
             POSTGRES_DB: walrus
 
-    walrus:
-        build:
-            context: .
-        ports:
-            - "8000:8000"
-        restart: unless-stopped
-        environment:
-            - RUST_ENV=production
-        profiles:
-            - prod
-        depends_on:
-            - db
-
     walrus-dev:
         build:
             context: .
@@ -28,7 +15,9 @@ services:
             - "3000:3000"
         environment:
             - RUST_ENV=development
-        env_file: .env
+        env_file:
+            - .env
+            - .env.local
         volumes:
             - ./env:/app/.env:ro
         develop:
@@ -43,3 +32,14 @@ services:
             - dev
         depends_on:
             - db
+
+    walrus:
+        build:
+            context: .
+        ports:
+            - "8000:8000"
+        restart: unless-stopped
+        environment:
+            - RUST_ENV=production
+        profiles:
+            - prod

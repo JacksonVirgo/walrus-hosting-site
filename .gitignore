@@ -1,5 +1,6 @@
 ./public/output.css
 .env
+.env.local
 .DS_Store
 debug
 target
