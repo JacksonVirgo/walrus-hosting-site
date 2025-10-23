@@ -13,7 +13,7 @@ use crate::{
         auth::types::{AuthQuery, DiscordTokenResponse},
         discord::user::{DiscordUser, DiscordUserData},
     },
-    utils::snowflake::SnowflakePayload,
+    utils::{crypto::tokens::generate_token, snowflake::SnowflakePayload},
 };
 
 pub async fn auth_callback(
@@ -40,7 +40,14 @@ pub async fn auth_callback(
         return format!("Internal server error");
     };
 
-    format!("Logged in as {}, with id {}", user.id, user.id)
+    let (Ok(access_token), Ok(refresh_token)) = (generate_token(), generate_token()) else {
+        return format!("Error has occurred creating your session, try again in a moment");
+    };
+
+    format!(
+        "Logged in as {}\nTokens: {} & {}",
+        user.id, access_token, refresh_token
+    )
 }
 
 async fn handle_login(db: &Database, discord_user: &DiscordUserData) -> anyhow::Result<User> {

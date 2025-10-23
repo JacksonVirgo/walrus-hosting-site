@@ -6,6 +6,7 @@ use chacha20poly1305::{
 };
 
 pub mod tests;
+pub mod tokens;
 
 pub fn key_from_env() -> anyhow::Result<Vec<u8>> {
     let raw =
