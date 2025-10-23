@@ -2,9 +2,10 @@ use crate::app::server::AppState;
 use axum::{Router, routing::get};
 
 pub mod callback;
+pub mod cookies;
+pub mod data;
 pub mod login;
 pub mod refresh;
-pub mod types;
 
 pub fn router() -> Router<AppState> {
     Router::new()

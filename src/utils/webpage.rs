@@ -1,4 +1,4 @@
-use maud::{Markup, html};
+use maud::{DOCTYPE, Markup, html};
 
 #[derive(Debug)]
 pub struct WebPageBuilder {
@@ -41,6 +41,7 @@ impl WebPageBuilder {
         };
 
         html! {
+            (DOCTYPE)
             head {
                 meta charset="utf-8";
                 title { (gen_title) }

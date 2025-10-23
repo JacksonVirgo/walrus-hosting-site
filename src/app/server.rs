@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use crate::features::router;
 use anyhow::Result;
-use axum::Router;
+use axum::{Router, http::HeaderValue};
+use reqwest::Method;
 use sqlx::{Pool, Postgres};
-use tower_http::services::ServeDir;
+use tower_http::{cors::CorsLayer, services::ServeDir};
 use tracing::info;
 
 #[derive(Clone)]
@@ -32,8 +33,21 @@ pub async fn start_server(db: Pool<Postgres>) -> Result<()> {
 
 pub fn generate_router(state: AppState) -> Router {
     let public = ServeDir::new("/app/public");
+
+    let origin: HeaderValue = std::env::var("APP_DOMAIN")
+        .expect("APP_DOMAIN must be set")
+        .parse()
+        .expect("APP_DOMAIN must be a valid URL");
+
+    let cors = CorsLayer::new()
+        .allow_origin(origin)
+        .allow_credentials(true)
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_headers(vec![]);
+
     Router::new()
         .merge(router())
         .with_state(state)
         .nest_service("/public", public)
+        .layer(cors)
 }

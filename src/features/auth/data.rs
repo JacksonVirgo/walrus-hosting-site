@@ -1,5 +1,8 @@
 use serde::Deserialize;
 
+pub const ACCESS_EXPIRY: i64 = 60 * 30;
+pub const REFRESH_EXPIRY: i64 = 60 * 60 * 24 * 14;
+
 #[derive(Deserialize)]
 pub struct AuthQuery {
     pub code: String,

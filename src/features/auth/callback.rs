@@ -1,16 +1,21 @@
 use anyhow::Result;
 use axum::{
     extract::{Query, State},
-    response::IntoResponse,
+    response::Html,
 };
-use reqwest::Client;
+use axum_extra::extract::CookieJar;
+use maud::html;
+use reqwest::{Client, StatusCode};
 use tracing::error;
 
 use crate::{
     app::{database::Database, server::AppState},
     data::{discord_connections::DiscordConnection, users::User},
     features::{
-        auth::types::{AuthQuery, DiscordTokenResponse},
+        auth::{
+            cookies::TokenCookie,
+            data::{AuthQuery, DiscordTokenResponse},
+        },
         discord::user::{DiscordUser, DiscordUserData},
     },
     utils::{crypto::tokens::generate_token, snowflake::SnowflakePayload},
@@ -19,12 +24,13 @@ use crate::{
 pub async fn auth_callback(
     Query(params): Query<AuthQuery>,
     State(ctx): State<AppState>,
-) -> impl IntoResponse {
+    jar: CookieJar,
+) -> Result<(CookieJar, Html<String>), StatusCode> {
     let client = Client::new();
 
     let Ok(token_resp) = request_token(&client, params.code).await else {
         error!("Failed to request token");
-        return format!("Failed to login");
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
 
     let Ok(discord_user) = DiscordUser::from_token(token_resp.access_token)
@@ -33,21 +39,28 @@ pub async fn auth_callback(
         .await
     else {
         error!("Failed to fetch user data");
-        return format!("Failed to fetch user data");
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
 
     let Ok(user) = handle_login(&ctx.db, &discord_user).await else {
-        return format!("Internal server error");
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
 
     let (Ok(access_token), Ok(refresh_token)) = (generate_token(), generate_token()) else {
-        return format!("Error has occurred creating your session, try again in a moment");
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
 
-    format!(
-        "Logged in as {}\nTokens: {} & {}",
-        user.id, access_token, refresh_token
-    )
+    Ok((
+        TokenCookie::new(user.id, access_token, refresh_token).build_from(jar),
+        Html(
+            html! {
+                div {
+                    "Logged In"
+                }
+            }
+            .into_string(),
+        ),
+    ))
 }
 
 async fn handle_login(db: &Database, discord_user: &DiscordUserData) -> anyhow::Result<User> {

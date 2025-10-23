@@ -20,6 +20,7 @@ COPY ./Cargo.toml ./
 
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release
+RUN rm -rf src
 
 COPY ./tailwind.config.js ./
 COPY ./src ./src
