@@ -4,6 +4,8 @@ use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 use tokio::time::sleep;
 use tracing::{error, info};
 
+pub type Database = Pool<Postgres>;
+
 pub async fn setup_database() -> anyhow::Result<Pool<Postgres>> {
     let conn = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 

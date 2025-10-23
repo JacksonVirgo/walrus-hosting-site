@@ -10,7 +10,8 @@ RUN apk add --no-cache \
     bash \
     build-base \
     pkgconf \
-    openssl-dev
+    openssl-dev \
+    openssl-libs-static
 
 WORKDIR /app
 
