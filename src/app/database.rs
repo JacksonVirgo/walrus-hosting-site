@@ -7,8 +7,6 @@ use tracing::{error, info};
 pub async fn setup_database() -> anyhow::Result<Pool<Postgres>> {
     let conn = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    println!("Conn: {}", conn);
-
     let mut attempts = 0;
     for i in 0..10 {
         info!("Attempting to connect to DB... attempt {}", i + 1);
