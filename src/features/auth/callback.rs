@@ -10,7 +10,7 @@ use tracing::error;
 
 use crate::{
     app::{database::Database, server::AppState},
-    data::{discord_connections::DiscordConnection, sessions::Session, users::User},
+    data::{discord_connections::DiscordConnection, users::User},
     features::{
         auth::{
             cookies::TokenCookie,
@@ -19,10 +19,7 @@ use crate::{
         },
         discord::user::{DiscordUser, DiscordUserData},
     },
-    utils::{
-        crypto::tokens::generate_token,
-        snowflake::{Snowflake, SnowflakeBuilder},
-    },
+    utils::snowflake::SnowflakeBuilder,
 };
 
 pub async fn auth_callback(
@@ -50,11 +47,15 @@ pub async fn auth_callback(
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
 
-    let Ok(session) = create_session(&ctx.db, user.id).await else {
+    let Ok((session, raw_session)) = create_session(&ctx.db, user.id).await else {
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
-    
-    TokenCookie::new(session.id, session.access_token, session.refresh_token);
+
+    TokenCookie::new(
+        session.id,
+        raw_session.access_token,
+        raw_session.refresh_token,
+    );
 
     Ok((
         jar, //TokenCookie::new(user.id, access_token, refresh_token).build_from(jar),
