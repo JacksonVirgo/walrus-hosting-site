@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::utils::snowflake::{CUSTOM_EPOCH, SnowflakeGenerator, SnowflakePayload};
+    use crate::utils::snowflake::{CUSTOM_EPOCH, SnowflakeBuilder, SnowflakeGenerator};
 
     use std::collections::HashSet;
     use std::sync::{Arc, Mutex};
@@ -8,7 +8,7 @@ mod tests {
 
     #[test]
     fn snowflake_roundtrip() {
-        let snowflake = SnowflakePayload {
+        let snowflake = SnowflakeBuilder {
             timestamp: CUSTOM_EPOCH + 1_000_000,
             worker_id: 0x1F & 3,
             process_id: 0x1F & 7,
@@ -16,7 +16,7 @@ mod tests {
         };
 
         let value = snowflake.to_snowflake();
-        let decoded = SnowflakePayload::from_snowflake(value);
+        let decoded = SnowflakeBuilder::from_snowflake(value);
 
         assert_eq!(snowflake.timestamp, decoded.timestamp);
         assert_eq!(snowflake.worker_id, decoded.worker_id);
@@ -37,7 +37,7 @@ mod tests {
             let set_cloned = Arc::clone(&set);
             handles.push(thread::spawn(move || {
                 for _ in 0..ids_per_thread {
-                    let sf = SnowflakePayload::new().expect("Snowflake failed to be generated");
+                    let sf = SnowflakeBuilder::new().expect("Snowflake failed to be generated");
                     let v = sf.to_snowflake();
                     let mut guard = set_cloned.lock().unwrap();
                     let inserted = guard.insert(v);

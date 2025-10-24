@@ -12,15 +12,15 @@ const CUSTOM_EPOCH: i64 = 1420070400000;
 pub type Snowflake = i64;
 
 #[derive(Debug, Clone, Copy)]
-pub struct SnowflakePayload {
+pub struct SnowflakeBuilder {
     pub timestamp: i64,
     pub worker_id: i64,
     pub process_id: i64,
     pub increment: i64,
 }
 
-impl SnowflakePayload {
-    pub fn new() -> anyhow::Result<SnowflakePayload> {
+impl SnowflakeBuilder {
+    pub fn new() -> anyhow::Result<SnowflakeBuilder> {
         let mut generator = SNOWFLAKE
             .lock()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
@@ -73,7 +73,7 @@ impl SnowflakeGenerator {
         Ok(time.as_millis() as u64)
     }
 
-    pub fn next(&mut self) -> anyhow::Result<SnowflakePayload> {
+    pub fn next(&mut self) -> anyhow::Result<SnowflakeBuilder> {
         let mut timestamp = Self::current_millis()? as i64;
         if timestamp == self.last_timestamp {
             self.increment = (self.increment + 1) & 0xFFF;
@@ -88,7 +88,7 @@ impl SnowflakeGenerator {
 
         self.last_timestamp = timestamp;
 
-        Ok(SnowflakePayload {
+        Ok(SnowflakeBuilder {
             timestamp,
             worker_id: self.worker_id,
             process_id: self.process_id,

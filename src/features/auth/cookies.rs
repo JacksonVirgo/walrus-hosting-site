@@ -1,7 +1,6 @@
 use axum_extra::extract::{CookieJar, cookie::Cookie};
-use time::{Duration, OffsetDateTime};
-
-use crate::features::auth::data::{ACCESS_EXPIRY, REFRESH_EXPIRY};
+use chrono::NaiveDateTime;
+use time::OffsetDateTime;
 
 pub struct TokenCookie {
     pub id: i64,
@@ -31,27 +30,39 @@ impl TokenCookie {
         c
     }
 
-    pub fn access_cookie(&self) -> Cookie<'static> {
+    pub fn access_cookie(&self, expiry: OffsetDateTime) -> Cookie<'static> {
         let mut c = Cookie::new("access_token", self.access_token.clone());
-        c.set_expires(OffsetDateTime::now_utc() + Duration::seconds(ACCESS_EXPIRY));
+        c.set_expires(expiry);
         c.set_secure(self.use_secure);
         c.set_http_only(true);
         c.set_path("/");
         c
     }
 
-    pub fn refresh_cookie(&self) -> Cookie<'static> {
+    pub fn refresh_cookie(&self, expiry: OffsetDateTime) -> Cookie<'static> {
         let mut c = Cookie::new("refresh_token", self.refresh_token.clone());
-        c.set_expires(OffsetDateTime::now_utc() + Duration::seconds(REFRESH_EXPIRY));
+        c.set_expires(expiry);
         c.set_secure(self.use_secure);
         c.set_http_only(true);
         c.set_path("/auth/refresh");
         c
     }
 
-    pub fn build_from(&self, jar: CookieJar) -> CookieJar {
-        jar.add(self.id_cookie())
-            .add(self.access_cookie())
-            .add(self.refresh_cookie())
+    pub fn build_from(
+        &self,
+        jar: CookieJar,
+        access_expiration: NaiveDateTime,
+        refresh_expiration: NaiveDateTime,
+    ) -> anyhow::Result<CookieJar> {
+        let access_expiry =
+            OffsetDateTime::from_unix_timestamp(access_expiration.and_utc().timestamp())?;
+
+        let refresh_expiry =
+            OffsetDateTime::from_unix_timestamp(refresh_expiration.and_utc().timestamp())?;
+
+        Ok(jar
+            .add(self.id_cookie())
+            .add(self.access_cookie(access_expiry))
+            .add(self.refresh_cookie(refresh_expiry)))
     }
 }

@@ -1,4 +1,8 @@
 use anyhow::anyhow;
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+};
 use base64::{Engine, prelude::*};
 use chacha20poly1305::{
     ChaCha20Poly1305, Key, Nonce,
@@ -59,4 +63,24 @@ pub fn decrypt(encoded: &str, key_bytes: &[u8]) -> anyhow::Result<String> {
         .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
     Ok(String::from_utf8(plaintext)?)
+}
+
+pub fn hash(str: &String) -> anyhow::Result<String> {
+    let bytes = str.as_bytes();
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    let hash = argon2
+        .hash_password(bytes, &salt)
+        .map_err(|e| anyhow::anyhow!(e.to_string()))?
+        .to_string();
+    Ok(hash)
+}
+
+pub fn verify_hash(data: &String, hash: &String) -> bool {
+    let Ok(parsed_hash) = PasswordHash::new(&hash) else {
+        return false;
+    };
+    Argon2::default()
+        .verify_password(data.as_bytes(), &parsed_hash)
+        .is_ok()
 }

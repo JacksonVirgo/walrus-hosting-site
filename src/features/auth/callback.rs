@@ -10,15 +10,19 @@ use tracing::error;
 
 use crate::{
     app::{database::Database, server::AppState},
-    data::{discord_connections::DiscordConnection, users::User},
+    data::{discord_connections::DiscordConnection, sessions::Session, users::User},
     features::{
         auth::{
             cookies::TokenCookie,
             data::{AuthQuery, DiscordTokenResponse},
+            session::create_session,
         },
         discord::user::{DiscordUser, DiscordUserData},
     },
-    utils::{crypto::tokens::generate_token, snowflake::SnowflakePayload},
+    utils::{
+        crypto::tokens::generate_token,
+        snowflake::{Snowflake, SnowflakeBuilder},
+    },
 };
 
 pub async fn auth_callback(
@@ -46,12 +50,14 @@ pub async fn auth_callback(
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
 
-    let (Ok(access_token), Ok(refresh_token)) = (generate_token(), generate_token()) else {
+    let Ok(session) = create_session(&ctx.db, user.id).await else {
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     };
+    
+    TokenCookie::new(session.id, session.access_token, session.refresh_token);
 
     Ok((
-        TokenCookie::new(user.id, access_token, refresh_token).build_from(jar),
+        jar, //TokenCookie::new(user.id, access_token, refresh_token).build_from(jar),
         Html(
             html! {
                 div {
@@ -82,7 +88,7 @@ async fn handle_login(db: &Database, discord_user: &DiscordUserData) -> anyhow::
     } else {
         let mut tx = db.begin().await?;
 
-        let id = SnowflakePayload::new()?.to_snowflake();
+        let id = SnowflakeBuilder::new()?.to_snowflake();
 
         let inserted_user = sqlx::query_as!(
             User,
